@@ -10,7 +10,7 @@ class CalculadoraNotas:
         self.root.resizable(False, False)
         
         # Guardar tamaño original
-        self.original_geometry = "500x450"
+        
         
         # Configurar estilo
         style = ttk.Style()
