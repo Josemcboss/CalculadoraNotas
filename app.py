@@ -117,37 +117,17 @@ if calcular:
 
         # Mostrar resultado
         st.markdown("---")
-        st.subheader("📊 Resultado Detallado")
-
-        # Contenedor del resultado con estilo personalizado
+        st.subheader("📊 Resultado Detallado")        # Contenedor del resultado con estilo personalizado
         st.markdown(f"""
         <div class="result-container">
-            <h4 style="text-align: center; color: #2c3e50; margin-bottom: 15px;">📋 DESGLOSE DEL CÁLCULO</h4>
-            
-            <p style="font-size: 14px; color: #7f8c8d; text-align: center; font-style: italic; margin-bottom: 15px;">
-                <strong>Fórmula:</strong> ((P1 + P2) / 2 + Práctica + Final) / 3
-            </p>
-            
-            <p style="font-size: 16px; margin: 10px 0; color: #34495e;">
-                <strong>📊 Paso 1 - Promedio de Exámenes:</strong><br>
-                ({primer_examen:.2f} + {segundo_examen:.2f}) / 2 = <strong style="color: #2c3e50;">{promedio_examenes:.2f}</strong>
-            </p>
-            
-            <p style="font-size: 16px; margin: 10px 0; color: #34495e;">
-                <strong>🎯 Paso 2 - Nota Final:</strong><br>
-                ({promedio_examenes:.2f} + {nota_practica:.2f} + {examen_final:.2f}) / 3 = <strong style="color: #2c3e50;">{nota_final:.2f}</strong>
-            </p>
-            
-            <hr style="margin: 20px 0;">
-            
             <div style="text-align: center;">
-                <p style="font-size: 28px; font-weight: bold; color: {color}; margin: 15px 0;">
+                <p style="font-size: 32px; font-weight: bold; color: {color}; margin: 20px 0;">
                     {'🎉 ¡Pasaste!' if letra != 'F' else '🔥 ¡Te quemaste!'} 
                 </p>
-                <p style="font-size: 24px; font-weight: bold; color: {color}; margin: 10px 0;">
+                <p style="font-size: 28px; font-weight: bold; color: {color}; margin: 15px 0;">
                     Calificación: {letra}
                 </p>
-                <p style="font-size: 16px; color: #7f8c8d; margin-bottom: 15px;">
+                <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 20px;">
                     {descripcion}
                 </p>
             </div>
