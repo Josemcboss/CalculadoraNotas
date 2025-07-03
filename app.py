@@ -181,3 +181,8 @@ st.markdown(
     "<p style='text-align: center; color: #7f8c8d; font-size: 12px;'>📚 Calculadora de Notas Universitarias - Desarrollado con Streamlit</p>",
     unsafe_allow_html=True
 )
+
+# Add author attribution and GitHub link
+st.sidebar.markdown("### Autor")
+st.sidebar.markdown("Jose Mencia, Estudiante de Ing En Sistemas")
+st.sidebar.markdown("[GitHub](https://github.com/Josemcboss)")
