@@ -123,6 +123,14 @@ st.set_page_config(
 
 # Selector de universidad en la barra lateral
 st.sidebar.title("🏛️ Universidades RD")
+
+# Selector de modo
+modo_app = st.sidebar.selectbox(
+    "Modo de la aplicación:",
+    ["Calculadora de Notas", "Calculadora de GPA Semestral"],
+    help="Elige entre calcular una materia individual o el GPA de todo el semestre"
+)
+
 universidad_seleccionada = st.sidebar.selectbox(
     "Selecciona tu universidad:",
     options=list(UNIVERSIDADES.keys()),
@@ -180,18 +188,162 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Título principal con colores de la universidad
+if modo_app == "Calculadora de Notas":
+    titulo_modo = f"🎓 Calculadora de Notas - {universidad_seleccionada}"
+else:
+    titulo_modo = f"📊 Calculadora de GPA Semestral - {universidad_seleccionada}"
+
 st.markdown(f"""
 <div class="universidad-header">
-    🎓 Calculadora de Notas - {universidad_seleccionada}
+    {titulo_modo}
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown(f"### {config_uni['nombre']}")
 st.markdown("---")
 
-# Campos de entrada según la universidad seleccionada
-if universidad_seleccionada == "UNPHU":
-    col1, col2 = st.columns(2)
+# Lógica principal según el modo
+if modo_app == "Calculadora de GPA Semestral":
+    st.markdown("### 📚 Calculadora de GPA Semestral")
+    st.markdown("Ingresa todas tus materias del semestre para calcular tu GPA acumulado")
+    
+    # Número de materias
+    num_materias = st.number_input(
+        "Número de materias cursadas:",
+        min_value=1,
+        max_value=12,
+        value=5,
+        help="¿Cuántas materias tomaste este semestre?"
+    )
+    
+    materias_gpa = []
+    total_creditos = 0
+    suma_ponderada = 0
+    
+    st.markdown("#### 📖 Ingresa los datos de cada materia")
+    
+    for i in range(num_materias):
+        st.markdown(f"**Materia {i+1}:**")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            nombre_materia = st.text_input(
+                f"Nombre:",
+                value=f"Materia {i+1}",
+                key=f"nombre_gpa_{i}",
+                help=f"Nombre de la materia {i+1}"
+            )
+        
+        with col2:
+            nota_materia = st.number_input(
+                f"Nota (0-100):",
+                min_value=0.0,
+                max_value=100.0,
+                value=0.0,
+                step=0.1,
+                key=f"nota_gpa_{i}",
+                help=f"Nota final de {nombre_materia}"
+            )
+        
+        with col3:
+            creditos_materia = st.number_input(
+                f"Créditos:",
+                min_value=1,
+                max_value=6,
+                value=3,
+                key=f"creditos_gpa_{i}",
+                help=f"Créditos de {nombre_materia}"
+            )
+        
+        if nota_materia > 0:
+            # Calcular GPA según la universidad
+            if universidad_seleccionada in ["UNIBE", "PUCMM"]:
+                gpa_materia, letra_materia = obtener_gpa_unibe_pucmm(nota_materia)
+            elif universidad_seleccionada == "UCE":
+                gpa_materia, letra_materia = obtener_gpa_uce(nota_materia)
+            else:
+                # Para otras universidades, convertir a escala 4.0
+                if nota_materia >= 90:
+                    gpa_materia, letra_materia = 4.0, "A"
+                elif nota_materia >= 80:
+                    gpa_materia, letra_materia = 3.0, "B"
+                elif nota_materia >= 70:
+                    gpa_materia, letra_materia = 2.0, "C"
+                elif nota_materia >= 60:
+                    gpa_materia, letra_materia = 1.0, "D"
+                else:
+                    gpa_materia, letra_materia = 0.0, "F"
+            
+            materias_gpa.append({
+                "nombre": nombre_materia,
+                "nota": nota_materia,
+                "creditos": creditos_materia,
+                "gpa": gpa_materia,
+                "letra": letra_materia
+            })
+            
+            total_creditos += creditos_materia
+            suma_ponderada += gpa_materia * creditos_materia
+    
+    # Botón calcular GPA
+    if st.button("📊 Calcular GPA Semestral", use_container_width=True):
+        if total_creditos > 0:
+            gpa_semestral = suma_ponderada / total_creditos
+            
+            st.markdown("---")
+            st.subheader(f"📊 Resultado GPA - {universidad_seleccionada}")
+            
+            # Determinar estado
+            if gpa_semestral >= config_uni['minimo_aprobar']:
+                estado_texto = "🎉 ¡Excelente semestre!"
+                color_estado = "#27ae60"
+            else:
+                estado_texto = "⚠️ Necesitas mejorar"
+                color_estado = "#e74c3c"
+            
+            # Mostrar resultado principal
+            st.markdown(f"""
+            <div class="result-container">
+                <div style="text-align: center;">
+                    <p style="font-size: 32px; font-weight: bold; color: {color_estado}; margin: 20px 0;">
+                        {estado_texto}
+                    </p>
+                    <p style="font-size: 28px; font-weight: bold; color: {config_uni['color_primario']}; margin: 15px 0;">
+                        GPA Semestral: {gpa_semestral:.3f}/4.000
+                    </p>
+                    <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 20px;">
+                        Total de créditos: {total_creditos}
+                    </p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Desglose por materias
+            st.markdown("#### 📋 Desglose por Materias")
+            
+            for materia in materias_gpa:
+                col1, col2, col3, col4, col5 = st.columns(5)
+                
+                with col1:
+                    st.metric("📚 Materia", materia['nombre'])
+                with col2:
+                    st.metric("📝 Nota", f"{materia['nota']:.1f}")
+                with col3:
+                    st.metric("🎯 Letra", materia['letra'])
+                with col4:
+                    st.metric("⚖️ GPA", f"{materia['gpa']:.1f}")
+                with col5:
+                    st.metric("💳 Créditos", materia['creditos'])
+                
+                st.markdown("---")
+        else:
+            st.warning("⚠️ Ingresa al menos una materia con nota mayor a 0")
+
+else:
+    # Código original para calculadora de notas individual
+    # Campos de entrada según la universidad seleccionada
+    if universidad_seleccionada == "UNPHU":
+        col1, col2 = st.columns(2)
     
     with col1:
         trabajos_practicos = st.number_input(
@@ -235,8 +387,8 @@ if universidad_seleccionada == "UNPHU":
             help="Nota del examen final"
         )
 
-elif universidad_seleccionada == "UTESA":
-    col1, col2, col3 = st.columns(3)
+    elif universidad_seleccionada == "UTESA":
+        col1, col2, col3 = st.columns(3)
     
     with col1:
         parcial1 = st.number_input(
@@ -271,7 +423,7 @@ elif universidad_seleccionada == "UTESA":
             help="Tercer parcial (30 puntos + 10 de participación)"
         )
 
-elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
+    elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
     st.markdown("### 📚 Ingresa las notas de tus materias")
     
     # Para UNIBE y PUCMM (sistema de créditos)
@@ -287,7 +439,7 @@ elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
         
         materias_data.append({"nota": nota, "creditos": creditos})
 
-else:  # Para las demás universidades (sistema tradicional)
+    else:  # Para las demás universidades (sistema tradicional)
     col1, col2 = st.columns(2)
     
     with col1:
@@ -332,16 +484,16 @@ else:  # Para las demás universidades (sistema tradicional)
             help="Ingresa tu nota del examen final"
         )
 
-# Espaciado
-st.markdown("<br>", unsafe_allow_html=True)
+    # Espaciado
+    st.markdown("<br>", unsafe_allow_html=True)
 
-# Botón para calcular (centrado)
-col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-with col_btn2:
+    # Botón para calcular (centrado)
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
     calcular = st.button("🧮 Calcular Resultado", use_container_width=True)
 
-# Lógica de cálculo según la universidad
-if calcular:
+    # Lógica de cálculo según la universidad
+    if calcular:
     resultado_texto = ""
     nota_final = 0
     aprobado = False
@@ -402,7 +554,7 @@ if calcular:
         st.markdown("---")
         st.subheader(f"📊 Resultado - {universidad_seleccionada}")
         
-        # Contenedor del resultado con colores de la universidad
+    # Contenedor del resultado con colores de la universidad
         estado_texto = "🎉 ¡Aprobaste!" if aprobado else "❌ No aprobaste"
         
         if universidad_seleccionada in ["UNIBE", "PUCMM"]:
@@ -429,7 +581,7 @@ if calcular:
         </div>
         """, unsafe_allow_html=True)
         
-        # Métricas adicionales específicas por universidad
+    # Métricas adicionales específicas por universidad
         st.markdown("<br>", unsafe_allow_html=True)
         
         if universidad_seleccionada == "UNPHU":
@@ -458,12 +610,12 @@ if calcular:
                     gpa_materia, letra_materia = obtener_gpa_unibe_pucmm(materia['nota'])
                     st.write(f"Materia {i+1}: {materia['nota']:.1f} ({letra_materia}) - {materia['creditos']} créditos - GPA: {gpa_materia:.1f}")
 
-# Información adicional específica de la universidad
-st.markdown("---")
-st.markdown(f"### ℹ️ Sistema de {universidad_seleccionada}")
-st.markdown(f"**{config_uni['descripcion']}**")
+    # Información adicional específica de la universidad
+    st.markdown("---")
+    st.markdown(f"### ℹ️ Sistema de {universidad_seleccionada}")
+    st.markdown(f"**{config_uni['descripcion']}**")
 
-if universidad_seleccionada == "UNPHU":
+    if universidad_seleccionada == "UNPHU":
     st.markdown("""
     - **A (90-100)**: Excelente 🌟
     - **B (80-89)**: Bueno 👍  
@@ -471,7 +623,7 @@ if universidad_seleccionada == "UNPHU":
     - **F (0-69)**: Reprobado ❌
     - **Mínimo para aprobar**: 70 puntos
     """)
-elif universidad_seleccionada == "UTESA":
+    elif universidad_seleccionada == "UTESA":
     st.markdown("""
     - **A (90-100)**: Excelente 🌟
     - **B (80-89)**: Bueno 👍
@@ -479,7 +631,7 @@ elif universidad_seleccionada == "UTESA":
     - **D/F (<70)**: Reprobado ❌
     - **Sistema**: 3 parciales (30+30+40 puntos)
     """)
-elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
+    elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
     st.markdown("""
     - **A = 4.0** (90-100): Excelente 🌟
     - **B = 3.0** (80-89): Bueno 👍
@@ -488,7 +640,7 @@ elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
     - **F = 0.0** (<60): Reprobado ❌
     - **Mínimo para aprobar**: 2.0 GPA
     """)
-elif universidad_seleccionada == "UCE":
+    elif universidad_seleccionada == "UCE":
     st.markdown("""
     - **A = 4.0** (90-100): Excelente 🌟
     - **B+ = 3.5** (85-89): Muy bueno ⭐
@@ -498,14 +650,14 @@ elif universidad_seleccionada == "UCE":
     - **D = 1.0** (60-69): Deficiente 📉
     - **F = 0.0** (<60): Reprobado ❌
     """)
-elif universidad_seleccionada == "ISFODOSU":
+    elif universidad_seleccionada == "ISFODOSU":
     st.markdown("""
     - **A = 4** (90-100): Excelente 🌟
     - **B = 3** (80-89): Bueno 👍
     - **C = 2** (70-79): Regular ⚠️
     - **Mínimo para aprobar**: 70 puntos
     """)
-elif universidad_seleccionada == "UASD":
+    elif universidad_seleccionada == "UASD":
     st.markdown("""
     - **≥70**: Condición normal ✅
     - **60-69**: Prevención académica ⚠️
@@ -513,12 +665,12 @@ elif universidad_seleccionada == "UASD":
     - **Nota**: Promedio ponderado del semestre
     """)
 
-# Footer
-st.markdown("---")
-st.markdown(
+    # Footer
+    st.markdown("---")
+    st.markdown(
     f"<p style='text-align: center; color: {config_uni['color_primario']}; font-size: 12px;'>🎓 Calculadora de Notas - Universidades de República Dominicana</p>",
     unsafe_allow_html=True
-)
+    )
 
 # Add author attribution and GitHub link
 st.sidebar.markdown("---")
