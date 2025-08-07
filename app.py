@@ -339,6 +339,7 @@ if modo_app == "Calculadora de GPA Semestral":
         else:
             st.warning("⚠️ Ingresa al menos una materia con nota mayor a 0")
 
+else:
     # Código original para calculadora de notas individual
     # Campos de entrada según la universidad seleccionada
     if universidad_seleccionada == "UNPHU":
@@ -419,7 +420,6 @@ if modo_app == "Calculadora de GPA Semestral":
                 value=0.0,
                 step=0.01,
                 format="%.2f",
-
                 help="Tercer parcial (30 puntos + 10 de participación)"
             )
 
