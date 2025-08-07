@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from typing import Optional
 
 class CalculadoraNotas:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("Calculadora de Notas Universitarias")
         self.root.geometry("500x450")
@@ -10,7 +11,7 @@ class CalculadoraNotas:
         self.root.resizable(False, False)
         
         # Guardar tamaño original
-        
+        self.original_geometry = "500x450"
         
         # Configurar estilo
         style = ttk.Style()
@@ -18,7 +19,7 @@ class CalculadoraNotas:
         
         self.crear_interfaz()
         
-    def crear_interfaz(self):
+    def crear_interfaz(self) -> None:
         # Título principal
         titulo = tk.Label(
             self.root, 
@@ -79,7 +80,7 @@ class CalculadoraNotas:
         )
         btn_limpiar.grid(row=6, column=0, columnspan=2, pady=10)
         
-    def crear_campo(self, parent, texto, atributo, fila):
+    def crear_campo(self, parent: tk.Frame, texto: str, atributo: str, fila: int) -> None:
         # Label
         label = tk.Label(
             parent, 
@@ -104,7 +105,7 @@ class CalculadoraNotas:
         # Guardar referencia al entry
         setattr(self, atributo, entry)
         
-    def validar_nota(self, nota_str, nombre_campo):
+    def validar_nota(self, nota_str: str, nombre_campo: str) -> Optional[float]:
         try:
             nota = float(nota_str)
             if nota < 0 or nota > 100:

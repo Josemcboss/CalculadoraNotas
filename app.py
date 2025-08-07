@@ -2,121 +2,30 @@
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 import streamlit as st
-
-# Configuración de universidades dominicanas con sus colores representativos
-UNIVERSIDADES = {    "UNPHU": {
-        "nombre": "Universidad Nacional Pedro Henríquez Ureña",
-        "color_primario": "#007A33",  # Verde
-        "color_secundario": "#FFFFFF",  # Blanco
-        "sistema": "Escala 0-100",
-        "minimo_aprobar": 70,
-        "descripcion": "Nota final = (Trabajos Prácticos + ((Parcial1 + Parcial2)/2) + Examen Final) / 3"
-    },
-    "UNIBE": {
-        "nombre": "Universidad Iberoamericana",
-        "color_primario": "#004A99",  # Azul.
-        "color_secundario": "#FFFFFF",  # Blanco. [4]
-        "sistema": "Índice Académico (0.00-4.00)",
-        "minimo_aprobar": 2.0,
-        "descripcion": "Índice = Sumatoria (Créditos x Valor de Calificación) / Total de Créditos"
-    },
-    "UTESA": {
-        "nombre": "Universidad Tecnológica de Santiago",
-        "color_primario": "#008A3D",  # Verde. [2]
-        "color_secundario": "#FFD700",  # Amarillo. [2]
-        "sistema": "Sistema de evaluación por parciales",
-        "minimo_aprobar": 70,
-        "descripcion": "Tres parciales de 30 puntos cada uno. Nota final: Parcial1 + Parcial2 + Parcial3"
-    },
-    "ISFODOSU": {
-        "nombre": "Instituto Superior de Formación Docente Salomé Ureña",
-        "color_primario": "#005EB8",  # Azul institucional. [18]
-        "color_secundario": "#FFFFFF",  # Blanco. [21]
-        "sistema": "Escala 0-100 convertida a GPA 0-4",
-        "minimo_aprobar": 70,
-        "descripcion": "A=4 (90-100), B=3 (80-89), C=2 (70-79)"
-    },
-    "UCE": {
-        "nombre": "Universidad Central del Este",
-        "color_primario": "#D4002D",  # Rojo Escarlata. [6, 11]
-        "color_secundario": "#0047AB",  # Azul Cobalto. [6, 11]
-        "sistema": "Escala 0-100 con conversión a GPA 0-4",
-        "minimo_aprobar": 70,
-        "descripcion": "A=4.0 (90-100), B+=3.5 (85-89), B=3.0 (80-84), C+=2.5 (75-79)"
-    },
-    "UASD": {
-        "nombre": "Universidad Autónoma de Santo Domingo",
-        "color_primario": "#002D62",  # Azul Añil. [3, 5]
-        "color_secundario": "#FFFFFF",  # Blanco. [1, 3]
-        "sistema": "Índice Académico basado en escala 0-100",
-        "minimo_aprobar": 70,
-        "descripcion": ">=70: condición normal, 60-69: prevención académica, <60: situación crítica"
-    },
-    "PUCMM": {
-        "nombre": "Pontificia Universidad Católica Madre y Maestra",
-        "color_primario": "#0038A8",  # Azul Pantone 286 C. [10]
-        "color_secundario": "#FFDA00",  # Amarillo Pantone Yellow 012 C. [10]
-        "sistema": "Índice Académico Acumulado (escala 0-4)",
-        "minimo_aprobar": 2.0,
-        "descripcion": "Índice = Sumatoria (Créditos x GPA) / Total de Créditos"
-    }
-}
-
-def obtener_letra_calificacion_universal(nota):
-    """Determina la letra de calificación basada en la nota (sistema universal)"""
-    if nota >= 90:
-        return "A", "Excelente (90-100)", "#27ae60"  # Verde
-    elif nota >= 80:
-        return "B", "Bueno (80-89)", "#f39c12"  # Naranja
-    elif nota >= 70:
-        return "C", "Regular (70-79)", "#e67e22"  # Naranja oscuro
-    else:
-        return "F", "Reprobado (0-69)", "#e74c3c"  # Rojo
-
-def obtener_gpa_unibe_pucmm(nota):
-    """Convierte nota a GPA para UNIBE y PUCMM"""
-    if nota >= 90:
-        return 4.0, "A"
-    elif nota >= 80:
-        return 3.0, "B"
-    elif nota >= 70:
-        return 2.0, "C"
-    elif nota >= 60:
-        return 1.0, "D"
-    else:
-        return 0.0, "F"
-
-def obtener_gpa_uce(nota):
-    """Convierte nota a GPA para UCE"""
-    if nota >= 90:
-        return 4.0, "A"
-    elif nota >= 85:
-        return 3.5, "B+"
-    elif nota >= 80:
-        return 3.0, "B"
-    elif nota >= 75:
-        return 2.5, "C+"
-    elif nota >= 70:
-        return 2.0, "C"
-    elif nota >= 60:
-        return 1.0, "D"
-    else:
-        return 0.0, "F"
-
-def calcular_nota_unphu(trabajos, parcial1, parcial2, examen_final):
-    """Calcula la nota final para UNPHU"""
-    promedio_parciales = (parcial1 + parcial2) / 2
-    nota_final = (trabajos + promedio_parciales + examen_final) / 3
-    return nota_final
-
-def calcular_nota_utesa(parcial1, parcial2, parcial3):
-    """Calcula la nota final para UTESA"""
-    return parcial1 + parcial2 + parcial3
+from typing import Dict, Any, List
+from config import UNIVERSIDADES, APP_CONFIG
+from utils import (
+    obtener_letra_calificacion_universal,
+    obtener_gpa_unibe_pucmm,
+    obtener_gpa_uce,
+    calcular_nota_unphu,
+    calcular_nota_utesa,
+    calcular_nota_tradicional,
+    calcular_gpa_ponderado,
+    formatear_nota,
+    es_aprobado
+)
+from export_utils import (
+    generar_reporte_json,
+    generar_reporte_csv,
+    generar_nombre_archivo,
+    crear_resumen_resultado
+)
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Calculadora de Notas - Universidades RD",
-    page_icon="🎓",
+    page_title=APP_CONFIG["title"],
+    page_icon=APP_CONFIG["icon"],
     layout="centered",
     initial_sidebar_state="expanded"
 )
@@ -367,14 +276,8 @@ if calcular:
         if total_creditos == 0:
             st.warning("⚠️ Por favor, ingresa al menos una materia con nota mayor que 0.")
         else:
-            suma_ponderada = 0
-            for materia in materias_data:
-                if materia['nota'] > 0:
-                    gpa, _ = obtener_gpa_unibe_pucmm(materia['nota'])
-                    suma_ponderada += gpa * materia['creditos']
-            
-            indice_academico = suma_ponderada / total_creditos
-            aprobado = indice_academico >= config_uni['minimo_aprobar']
+            indice_academico, total_creditos = calcular_gpa_ponderado(materias_data)
+            aprobado = es_aprobado(indice_academico, config_uni['minimo_aprobar'])
             nota_final = indice_academico
             color = "#27ae60" if aprobado else "#e74c3c"
             
@@ -382,19 +285,17 @@ if calcular:
         if all(nota == 0 for nota in [primer_examen, segundo_examen, nota_practica, examen_final]):
             st.warning("⚠️ Por favor, ingresa al menos una nota mayor que 0.")
         else:
-            promedio_examenes = (primer_examen + segundo_examen) / 2
-            nota_final = (promedio_examenes + nota_practica + examen_final) / 3
+            nota_final = calcular_nota_tradicional(primer_examen, segundo_examen, nota_practica, examen_final)
             gpa, letra = obtener_gpa_uce(nota_final)
-            aprobado = nota_final >= config_uni['minimo_aprobar']
+            aprobado = es_aprobado(nota_final, config_uni['minimo_aprobar'])
             color = "#27ae60" if aprobado else "#e74c3c"
             
     else:  # ISFODOSU, UASD
         if all(nota == 0 for nota in [primer_examen, segundo_examen, nota_practica, examen_final]):
             st.warning("⚠️ Por favor, ingresa al menos una nota mayor que 0.")
         else:
-            promedio_examenes = (primer_examen + segundo_examen) / 2
-            nota_final = (promedio_examenes + nota_practica + examen_final) / 3
-            aprobado = nota_final >= config_uni['minimo_aprobar']
+            nota_final = calcular_nota_tradicional(primer_examen, segundo_examen, nota_practica, examen_final)
+            aprobado = es_aprobado(nota_final, config_uni['minimo_aprobar'])
             letra, descripcion, color = obtener_letra_calificacion_universal(nota_final)
     
     # Mostrar resultado si hay cálculo válido
@@ -457,6 +358,60 @@ if calcular:
                 if materia['nota'] > 0:
                     gpa_materia, letra_materia = obtener_gpa_unibe_pucmm(materia['nota'])
                     st.write(f"Materia {i+1}: {materia['nota']:.1f} ({letra_materia}) - {materia['creditos']} créditos - GPA: {gpa_materia:.1f}")
+        
+        # Botones de exportación
+        if 'nota_final' in locals() and nota_final > 0:
+            st.markdown("### 📥 Exportar Resultados")
+            col_export1, col_export2 = st.columns(2)
+            
+            # Preparar datos para exportar
+            if universidad_seleccionada == "UNPHU":
+                datos_entrada = {
+                    "trabajos_practicos": trabajos_practicos,
+                    "primer_parcial": parcial1, 
+                    "segundo_parcial": parcial2,
+                    "examen_final": examen_final
+                }
+            elif universidad_seleccionada == "UTESA":
+                datos_entrada = {
+                    "primer_parcial": parcial1,
+                    "segundo_parcial": parcial2, 
+                    "tercer_parcial": parcial3
+                }
+            elif universidad_seleccionada in ["UNIBE", "PUCMM"]:
+                datos_entrada = {"materias": materias_data}
+            else:
+                datos_entrada = {
+                    "primer_examen": primer_examen,
+                    "segundo_examen": segundo_examen,
+                    "nota_practica": nota_practica,
+                    "examen_final": examen_final
+                }
+            
+            resultado = crear_resumen_resultado(
+                nota_final, aprobado, universidad_seleccionada, 
+                config_uni['sistema']
+            )
+            
+            with col_export1:
+                json_data = generar_reporte_json(universidad_seleccionada, datos_entrada, resultado)
+                st.download_button(
+                    label="📄 Descargar JSON",
+                    data=json_data,
+                    file_name=generar_nombre_archivo(universidad_seleccionada, "json"),
+                    mime="application/json",
+                    use_container_width=True
+                )
+            
+            with col_export2:
+                csv_data = generar_reporte_csv(universidad_seleccionada, datos_entrada, resultado)
+                st.download_button(
+                    label="📊 Descargar CSV", 
+                    data=csv_data,
+                    file_name=generar_nombre_archivo(universidad_seleccionada, "csv"),
+                    mime="text/csv",
+                    use_container_width=True
+                )
 
 # Información adicional específica de la universidad
 st.markdown("---")
@@ -523,9 +478,9 @@ st.markdown(
 # Add author attribution and GitHub link
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 👨‍💻 Autor")
-st.sidebar.markdown("**Jose Mencia**")
+st.sidebar.markdown(f"**{APP_CONFIG['author']}**")
 st.sidebar.markdown("*Estudiante de Ing En Sistemas*")
-st.sidebar.markdown("[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Josemcboss)")
+st.sidebar.markdown(f"[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)]({APP_CONFIG['github_url']})")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🇩🇴 Universidades Incluidas")
 for uni_key, uni_data in UNIVERSIDADES.items():
